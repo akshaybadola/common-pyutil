@@ -2,10 +2,28 @@ import os
 import sys
 import json
 import logging
+import inspect
+import numpy
 
 
-def _dump(x):
-    return json.dumps(x, default=lambda o: f"<<non-serializable: {type(o).__qualname__}>>")
+def _serialize_ndarray(x):
+    """Serializes ndarray.
+
+    :param x: :class: `numpy.ndarray`
+    :returns: json serialized string
+    :rtype: str
+
+    """
+    if isinstance(x, numpy.ndarray):
+        return json.dumps(x.tolist())
+    # elif isinstance(x, torch.Tensor):
+    #     return json.dumps(x.cpu().numpy().tolist())
+    else:
+        f"<<{type(x).__qualname__}>>"
+
+
+def dumps_safe(x):
+    return json.dumps(x, default=_serialize_ndarray)
     # return json.dumps(x, default=lambda o: f"{{Object, {type(o).__qualname__}}}")
 
 
@@ -61,3 +79,40 @@ def gen_file_and_stream_logger(logdir, log_file_name):
     logger.addHandler(stream_handler)
     logger.setLevel(logging.DEBUG)
     return logger
+
+
+# Utility functions to ease logging
+def _logi(logger, x):
+    "Log to INFO and return string with name of calling function"
+    f = inspect.currentframe()
+    prev_func = inspect.getframeinfo(f.f_back).function
+    x = f"[{prev_func}()] " + x
+    logger.info(x)
+    return x
+
+
+def _logd(logger, x):
+    "Log to DEBUG and return string with name of calling function"
+    f = inspect.currentframe()
+    prev_func = inspect.getframeinfo(f.f_back).function
+    x = f"[{prev_func}()] " + x
+    logger.debug(x)
+    return x
+
+
+def _logw(logger, x):
+    "Log to WARN and return string with name of calling function"
+    f = inspect.currentframe()
+    prev_func = inspect.getframeinfo(f.f_back).function
+    x = f"[{prev_func}()] " + x
+    logger.warn(x)
+    return x
+
+
+def _loge(logger, x):
+    "Log to ERROR and return string with name of calling function"
+    f = inspect.currentframe()
+    prev_func = inspect.getframeinfo(f.f_back).function
+    x = f"[{prev_func}()] " + x
+    logger.error(x)
+    return x
