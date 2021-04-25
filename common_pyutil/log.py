@@ -1,3 +1,4 @@
+from typing import Optional, Tuple, Dict, List
 import os
 import sys
 import json
@@ -24,26 +25,6 @@ def _serialize_ndarray(x):
 
 def dumps_safe(x):
     return json.dumps(x, default=_serialize_ndarray)
-    # return json.dumps(x, default=lambda o: f"{{Object, {type(o).__qualname__}}}")
-
-
-def gen_file_logger(logdir, log_file_name):
-    logger = logging.getLogger('default_logger')
-    formatter = logging.Formatter(datefmt='%Y/%m/%d %I:%M:%S %p', fmt='%(asctime)s %(message)s')
-    if not os.path.exists(logdir):
-        os.mkdir(logdir)
-    if not log_file_name.endswith('.log'):
-        log_file_name += '.log'
-    log_file = os.path.abspath(os.path.join(logdir, log_file_name))
-    if os.path.exists(log_file):
-        backup_num = get_backup_num(logdir, log_file_name)
-        os.rename(log_file, log_file + '.' + str(backup_num))
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-    logger.setLevel(logging.DEBUG)
-    return logger
 
 
 def get_backup_num(filedir, filename):
@@ -58,30 +39,87 @@ def get_backup_num(filedir, filename):
     return cur_backup_num
 
 
-def gen_file_and_stream_logger(logdir, log_file_name):
-    logger = logging.getLogger('default_logger')
-    formatter = logging.Formatter(datefmt='%Y/%m/%d %I:%M:%S %p', fmt='%(asctime)s %(message)s')
-    if not os.path.exists(logdir):
-        os.mkdir(logdir)
-    if not log_file_name.endswith('.log'):
-        log_file_name += '.log'
-    log_file = os.path.abspath(os.path.join(logdir, log_file_name))
-    if os.path.exists(log_file):
-        backup_num = get_backup_num(logdir, log_file_name)
-        os.rename(log_file, log_file + '.' + str(backup_num))
-    file_handler = logging.FileHandler(log_file)
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(logging.INFO)
-    stream_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.DEBUG)
-    file_handler.setFormatter(formatter)
-    logger.addHandler(file_handler)
-    logger.addHandler(stream_handler)
-    logger.setLevel(logging.DEBUG)
-    return logger
+def get_file_and_stream_logger(logdir: Optional[str], logger_name: str,
+                               log_file_name: Optional[str],
+                               stream_log_level: Optional[str] = "info",
+                               file_log_level: Optional[str] = "debug",
+                               logger_level: Optional[str] = "debug",
+                               one_file: Optional[bool] = True,
+                               datefmt: Optional[str] = None,
+                               fmt: Optional[str] = None,
+                               no_file_logger: bool = False,
+                               no_stream_logger: bool = False):
+    if not datefmt:
+        datefmt = '%Y/%m/%d %I:%M:%S %p'
+    if not fmt:
+        '%(asctime)s %(message)s'
+    logger = logging.getLogger(logger_name)
+    formatter = logging.Formatter(datefmt=datefmt, fmt=fmt)
+    if not no_file_logger and logdir and log_file_name:
+        if not os.path.exists(logdir):
+            os.mkdir(logdir)
+        if not log_file_name.endswith('.log'):
+            log_file_name += '.log'
+        log_file = os.path.abspath(os.path.join(logdir, log_file_name))
+        if not one_file and os.path.exists(log_file):
+            backup_num = get_backup_num(logdir, log_file_name)
+            os.rename(log_file, log_file + '.' + str(backup_num))
+        file_handler = logging.FileHandler(log_file)
+    if not no_stream_logger:
+        stream_handler = logging.StreamHandler(sys.stdout)
+        if stream_log_level is not None and hasattr(logging, stream_log_level.upper()):
+            stream_handler.setLevel(getattr(logging, stream_log_level.upper()))
+        else:
+            stream_handler.setLevel(logging.INFO)
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+    if not no_file_logger:
+        if file_log_level is not None and hasattr(logging, file_log_level.upper()):
+            file_handler.setLevel(getattr(logging, file_log_level.upper()))
+        else:
+            file_handler.setLevel(logging.INFO)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+    if logger_level is not None and hasattr(logging, logger_level.upper()):
+        logger.setLevel(getattr(logging, logger_level.upper()))
+    else:
+        logger.setLevel(logging.DEBUG)
+    return log_file, logger
+
+
+def get_file_logger(logdir, logger_name: str,
+                    log_file_name: str,
+                    log_level: Optional[str] = "debug",
+                    logger_level: Optional[str] = "debug",
+                    one_file: Optional[bool] = True,
+                    datefmt: Optional[str] = None,
+                    fmt: Optional[str] = None):
+    return get_file_and_stream_logger(logdir, logger_name, log_file_name,
+                                      file_log_level=log_level,
+                                      logger_level=logger_level,
+                                      one_file=one_file,
+                                      no_stream_logger=True,
+                                      datefmt=datefmt,
+                                      fmt=fmt)
+
+
+def get_stream_logger(logger_name: str,
+                      log_level: Optional[str] = "debug",
+                      logger_level: Optional[str] = "debug",
+                      one_file: Optional[bool] = True,
+                      datefmt: Optional[str] = None,
+                      fmt: Optional[str] = None):
+    return get_file_and_stream_logger(None, logger_name, None,
+                                      stream_log_level=log_level,
+                                      logger_level=logger_level,
+                                      no_file_logger=True,
+                                      datefmt=datefmt,
+                                      fmt=fmt)
 
 
 # Utility functions to ease logging
+# These are hacky functions and should not be used in production code
+# Perhaps a wrapper would be better, or a function class
 def _logi(logger, x):
     "Log to INFO and return string with name of calling function"
     f = inspect.currentframe()
