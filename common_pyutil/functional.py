@@ -2,6 +2,16 @@ from typing import Union, List, Optional, Any, Callable, Iterable, Dict
 from functools import partial, reduce
 
 
+def identity(x: Any):
+    """Identity function.
+
+    Example:
+        identity(10) == 10
+        identity(None) == None
+    """
+    return x
+
+
 def rpartial(func, *args):
     def temp(*rest):
         return func(*rest, *args)
@@ -80,16 +90,6 @@ def seq(*funcs: Callable) -> Callable:
     """Alias for thunkify
     """
     return thunkify(*funcs)
-
-
-def identity(x: Any):
-    """Identity function.
-
-    Example:
-        identity(10) == 10
-        identity(None) == None
-    """
-    return x
 
 
 def pipe(*args: Callable) -> Callable:
