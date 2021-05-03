@@ -4,7 +4,7 @@ from setuptools import setup
 from common_pyutil.version import __version__
 
 
-description = """Some common python utility functions"""
+description = """Some common python utility functions."""
 
 with open("README.md") as f:
     long_description = f.read()
@@ -34,6 +34,6 @@ setup(
     packages=["common_pyutil"],
     include_package_data=True,
     keywords='utilities functional',
-    python_requires=">=3.6, <=3.9",
-    install_requires=["numpy"]
+    python_requires=">=3.6, <=4.0",
+    install_requires=["requests==2.24.0"]
 )

@@ -1,30 +1,8 @@
 from typing import Optional, Tuple, Dict, List
 import os
 import sys
-import json
 import logging
 import inspect
-import numpy
-
-
-def _serialize_ndarray(x):
-    """Serializes ndarray.
-
-    :param x: :class: `numpy.ndarray`
-    :returns: json serialized string
-    :rtype: str
-
-    """
-    if isinstance(x, numpy.ndarray):
-        return json.dumps(x.tolist())
-    # elif isinstance(x, torch.Tensor):
-    #     return json.dumps(x.cpu().numpy().tolist())
-    else:
-        f"<<{type(x).__qualname__}>>"
-
-
-def dumps_safe(x):
-    return json.dumps(x, default=_serialize_ndarray)
 
 
 def get_backup_num(filedir, filename):
