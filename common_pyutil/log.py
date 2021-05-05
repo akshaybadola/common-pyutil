@@ -26,7 +26,7 @@ def get_file_and_stream_logger(logdir: Optional[str], logger_name: str,
                                datefmt: Optional[str] = None,
                                fmt: Optional[str] = None,
                                no_file_logger: bool = False,
-                               no_stream_logger: bool = False):
+                               no_stream_logger: bool = False) -> Tuple[str, logging.Logger]:
     if not datefmt:
         datefmt = '%Y/%m/%d %I:%M:%S %p'
     if not fmt:
@@ -43,6 +43,8 @@ def get_file_and_stream_logger(logdir: Optional[str], logger_name: str,
             backup_num = get_backup_num(logdir, log_file_name)
             os.rename(log_file, log_file + '.' + str(backup_num))
         file_handler = logging.FileHandler(log_file)
+    else:
+        log_file = ""
     if not no_stream_logger:
         stream_handler = logging.StreamHandler(sys.stdout)
         if stream_log_level is not None and hasattr(logging, stream_log_level.upper()):
@@ -71,7 +73,7 @@ def get_file_logger(logdir, logger_name: str,
                     logger_level: Optional[str] = "debug",
                     one_file: Optional[bool] = True,
                     datefmt: Optional[str] = None,
-                    fmt: Optional[str] = None):
+                    fmt: Optional[str] = None) -> Tuple[str, logging.Logger]:
     return get_file_and_stream_logger(logdir, logger_name, log_file_name,
                                       file_log_level=log_level,
                                       logger_level=logger_level,
@@ -86,13 +88,13 @@ def get_stream_logger(logger_name: str,
                       logger_level: Optional[str] = "debug",
                       one_file: Optional[bool] = True,
                       datefmt: Optional[str] = None,
-                      fmt: Optional[str] = None):
+                      fmt: Optional[str] = None) -> logging.Logger:
     return get_file_and_stream_logger(None, logger_name, None,
                                       stream_log_level=log_level,
                                       logger_level=logger_level,
                                       no_file_logger=True,
                                       datefmt=datefmt,
-                                      fmt=fmt)
+                                      fmt=fmt)[1]
 
 
 # Utility functions to ease logging
