@@ -82,6 +82,12 @@ def applify(func: Callable, struct: Iterable[Iterable]):
     return map(partial(apply, func), struct)
 
 
+def apply_list(funcs: Iterable[Callable], struct: Iterable) -> List:
+    """Apply each function to item in two iterables.
+    """
+    return [fn(it) for fn, it in zip(funcs, struct)]
+
+
 def apply(func: Callable, args: List):
     return func(*args)
 
@@ -163,6 +169,20 @@ def print_lens(obj: Optional[Dict], *args, prefix="") -> Any:
     else:
         print(prefix + " -> " + str(obj))
         return obj
+
+
+def set_lens(obj: Optional[Dict], keys: List[str], val: Any) -> bool:
+    """Return a value in a nested object.
+    """
+    if obj is None:
+        return False
+    elif keys and len(keys) == 1:
+        obj[keys[0]] = val
+        return True
+    elif keys:
+        return set_lens(obj.get(keys[0]), keys[1:], val)
+    else:
+        return False
 
 
 def lens(obj: Optional[Dict], *args) -> Any:
