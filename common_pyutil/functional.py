@@ -58,11 +58,21 @@ def last_item(struct: Optional[Iterable]):
 
 
 def first(struct: Iterable, predicate: Callable = identity):
+    """Return first item of `struct` which satisfies `predicate`.
+    """
     return first_by(struct, identity, predicate)
 
 
 def car(struct: Iterable):
+    """Return first item of `struct`.
+    """
     return next(iter(struct))
+
+
+def first_item(struct: Iterable):
+    """Return first item of `struct`.
+    """
+    return car(struct)
 
 
 def nth(struct: Iterable, indx: int):
@@ -242,3 +252,65 @@ def takewhile(predicate, seq):
             _next = it.__next__()
         except StopIteration:
             return None
+
+
+def flatten_struct(struct, _type=None):
+    """Return a flattend list from a possibly nested iterable.
+
+    I'm not sure there's a usecase for this beyond lists
+    """
+    retval = []
+    # in case the underlying structure is also an iterable to avoid that also
+    # being extended with retval, e.g., a string
+    t = _type or type(struct)
+    it = iter(struct)
+    _next = it.__next__()
+    while _next:
+        try:
+            if not isinstance(_next, t):
+                retval.append(_next)
+            else:
+                retval.extend(flatten(_next, t))
+            _next = it.__next__()
+        except StopIteration:
+            return retval
+    return retval
+
+
+def flatten(_list: List, depth: Optional[int] = None):
+    """Return a flattend list from a possibly nested list.
+
+    Args:
+        depth: Depth to recurse
+    """
+    retval = []
+    if depth is not None:
+        depth -= 1
+        if depth == -1:
+            return _list
+    for x in _list:
+        if not isinstance(x, list):
+            retval.append(x)
+        else:
+            retval.extend(flatten(x, depth))
+    return retval
+
+
+def map_if(func: Callable, pred: Callable[..., bool], struct: Iterable) -> list:
+    """Map :code:`func` to :code:`struct` if item of :code:`struct` satisfies :code:`pred`
+
+    Args:
+        func: Any Callable
+        pred: A predicate which returns a bool
+        struct: Iterable on which to map
+    """
+    retval = []
+    it = iter(struct)
+    _next = it.__next__()
+    while _next:
+        try:
+            retval.append(func(_next) if pred(_next) else _next)
+            _next = it.__next__()
+        except StopIteration:
+            return retval
+    return retval
