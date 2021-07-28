@@ -1,3 +1,4 @@
+from typing import Union, List
 import os
 import sys
 import importlib.machinery
@@ -5,7 +6,51 @@ import importlib.util
 from typing import List
 
 
-def which(program):
+class Semver:
+    def __init__(self, version_string: str):
+        self._version: List[int] = [*map(int, version_string.split("."))]
+
+    def greater_than(self, other: Union["Semver", str]):
+        if isinstance(other, str):
+            other = Semver(other)
+            return self.greater_than(other)
+        elif isinstance(other, Semver):
+            greater = False
+            nolesser = True
+            for x, y in zip(self._version, other._version):
+                if x > y:
+                    greater = True
+                    break
+                if y > x:
+                    nolesser = False
+            if len(other) < len(self):
+                return nolesser or greater
+            else:
+                return nolesser and greater
+
+    def equal_to(self, other: Union["Semver", str]):
+        if isinstance(other, str):
+            other = Semver(other)
+            return self.equal_to(other)
+        else:
+            return len(self) == len(other) and\
+                all([x == y for x, y in zip(self._version, other._version)])
+
+    def smaller_than(self, other: Union["Semver", str]):
+        if isinstance(other, str):
+            other = Semver(other)
+            return self.smaller_than(other)
+        else:
+            return not self.greater_than(other) and not self.equal_to(other)
+
+    def __len__(self):
+        return len(self._version)
+
+    def __repr__(self):
+        return ".".join(map(str, self._version))
+
+
+def which(program: str):
     """
     This function is taken from
     http://stackoverflow.com/questions/377017/test-if-executable-exists-in-python

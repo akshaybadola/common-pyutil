@@ -35,5 +35,5 @@ setup(
     include_package_data=True,
     keywords='utilities functional',
     python_requires=">=3.6, <=4.0",
-    install_requires=["requests==2.24.0"]
+    install_requires=["requests==2.26.0"]
 )

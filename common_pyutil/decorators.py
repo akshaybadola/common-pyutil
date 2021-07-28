@@ -47,7 +47,7 @@ class Tag:
     def members(self) -> Dict[str, Callable]:
         return self._members
 
-    def __call__(self, f):
+    def __call__(self, f: Callable) -> Callable:
         if f not in self._members:
             if isinstance(f, property):
                 self._members[f.fget.__name__] = f
