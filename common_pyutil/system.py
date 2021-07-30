@@ -1,9 +1,9 @@
-from typing import Union, List
+from typing import Union, List, Optional
 import os
 import sys
 import importlib.machinery
 import importlib.util
-from typing import List
+import types
 
 
 class Semver:
@@ -70,7 +70,7 @@ def which(program: str):
     return None
 
 
-def load_user_module(modname: str, search_path: List[str] = None):
+def load_user_module(modname: str, search_path: List[str] = None) -> Optional[types.ModuleType]:
     """`search_paths` is a list of paths. Defaults to `sys.path`"""
     if search_path is not None:
         spec = importlib.machinery.PathFinder.find_spec(modname, search_path)
@@ -83,5 +83,9 @@ def load_user_module(modname: str, search_path: List[str] = None):
         return None
     mod = importlib.util.module_from_spec(spec)
     sys.modules[modname] = mod
-    spec.loader.exec_module(mod)
     return mod
+    # if spec.loader:
+    #     spec.loader.exec_module(mod)
+    #     return mod
+    # else:
+    #     return None

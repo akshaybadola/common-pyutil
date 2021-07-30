@@ -5,7 +5,14 @@ import logging
 import inspect
 
 
-def get_backup_num(filedir, filename):
+def get_backup_num(filedir: str, filename: str) -> int:
+    """Get a max integer suffix for a prefix.
+
+    Args:
+        filedir: Directory of files
+        filename: Prefix filename
+
+    """
     backup_files = [x for x in os.listdir(filedir) if x.startswith(filename)]
     backup_maybe_nums = [b.split('.')[-1] for b in backup_files]
     backup_nums = [int(x) for x in backup_maybe_nums
@@ -22,11 +29,29 @@ def get_file_and_stream_logger(logdir: Optional[str], logger_name: str,
                                stream_log_level: Optional[str] = "info",
                                file_log_level: Optional[str] = "debug",
                                logger_level: Optional[str] = "debug",
-                               one_file: Optional[bool] = True,
+                               new_file: Optional[bool] = True,
                                datefmt: Optional[str] = None,
                                fmt: Optional[str] = None,
                                no_file_logger: bool = False,
                                no_stream_logger: bool = False) -> Tuple[str, logging.Logger]:
+    """Get a Logger with sensible defaults.
+
+    Args:
+        logdir: Directory in which to write the log file
+        logger_name: Name of the logger
+        log_file_name: Name of the log file. If it doesn't end with ".log" it's appended
+        stream_log_level: Log level for stream logger
+        file_log_level: Log level for file logger
+        logger_level: Log level of logger
+        new_file: Should we create a new file or append to existing log file?
+        datefmt: Timestamp format
+        fmt: Logger format
+        no_file_logger: Don't create a file logger
+        no_stream_logger: Don't create a stream logger
+
+    Returns:
+        A tuple of filename and the logger instance
+    """
     if not datefmt:
         datefmt = '%Y/%m/%d %I:%M:%S %p'
     if not fmt:
@@ -39,7 +64,7 @@ def get_file_and_stream_logger(logdir: Optional[str], logger_name: str,
         if not log_file_name.endswith('.log'):
             log_file_name += '.log'
         log_file = os.path.abspath(os.path.join(logdir, log_file_name))
-        if not one_file and os.path.exists(log_file):
+        if new_file and os.path.exists(log_file):
             backup_num = get_backup_num(logdir, log_file_name)
             os.rename(log_file, log_file + '.' + str(backup_num))
         file_handler = logging.FileHandler(log_file)
@@ -71,13 +96,13 @@ def get_file_logger(logdir, logger_name: str,
                     log_file_name: str,
                     log_level: Optional[str] = "debug",
                     logger_level: Optional[str] = "debug",
-                    one_file: Optional[bool] = True,
+                    new_file: Optional[bool] = True,
                     datefmt: Optional[str] = None,
                     fmt: Optional[str] = None) -> Tuple[str, logging.Logger]:
     return get_file_and_stream_logger(logdir, logger_name, log_file_name,
                                       file_log_level=log_level,
                                       logger_level=logger_level,
-                                      one_file=one_file,
+                                      new_file=new_file,
                                       no_stream_logger=True,
                                       datefmt=datefmt,
                                       fmt=fmt)
@@ -86,7 +111,7 @@ def get_file_logger(logdir, logger_name: str,
 def get_stream_logger(logger_name: str,
                       log_level: Optional[str] = "debug",
                       logger_level: Optional[str] = "debug",
-                      one_file: Optional[bool] = True,
+                      new_file: Optional[bool] = True,
                       datefmt: Optional[str] = None,
                       fmt: Optional[str] = None) -> logging.Logger:
     return get_file_and_stream_logger(None, logger_name, None,
@@ -100,37 +125,49 @@ def get_stream_logger(logger_name: str,
 # Utility functions to ease logging
 # These are hacky functions and should not be used in production code
 # Perhaps a wrapper would be better, or a function class
-def _logi(logger, x):
+def _logi(logger: logging.Logger, x: str) -> str:
     "Log to INFO and return string with name of calling function"
     f = inspect.currentframe()
-    prev_func = inspect.getframeinfo(f.f_back).function
-    x = f"[{prev_func}()] " + x
-    logger.info(x)
-    return x
+    if f and f.f_back:
+        prev_func = inspect.getframeinfo(f.f_back).function
+        x = f"[{prev_func}()] " + x
+        logger.info(x)
+        return x
+    else:
+        return ""
 
 
-def _logd(logger, x):
+def _logd(logger: logging.Logger, x: str) -> str:
     "Log to DEBUG and return string with name of calling function"
     f = inspect.currentframe()
-    prev_func = inspect.getframeinfo(f.f_back).function
-    x = f"[{prev_func}()] " + x
-    logger.debug(x)
-    return x
+    if f and f.f_back:
+        prev_func = inspect.getframeinfo(f.f_back).function
+        x = f"[{prev_func}()] " + x
+        logger.debug(x)
+        return x
+    else:
+        return ""
 
 
-def _logw(logger, x):
+def _logw(logger: logging.Logger, x: str) -> str:
     "Log to WARN and return string with name of calling function"
     f = inspect.currentframe()
-    prev_func = inspect.getframeinfo(f.f_back).function
-    x = f"[{prev_func}()] " + x
-    logger.warn(x)
-    return x
+    if f and f.f_back:
+        prev_func = inspect.getframeinfo(f.f_back).function
+        x = f"[{prev_func}()] " + x
+        logger.warn(x)
+        return x
+    else:
+        return ""
 
 
-def _loge(logger, x):
+def _loge(logger: logging.Logger, x: str) -> str:
     "Log to ERROR and return string with name of calling function"
     f = inspect.currentframe()
-    prev_func = inspect.getframeinfo(f.f_back).function
-    x = f"[{prev_func}()] " + x
-    logger.error(x)
-    return x
+    if f and f.f_back:
+        prev_func = inspect.getframeinfo(f.f_back).function
+        x = f"[{prev_func}()] " + x
+        logger.error(x)
+        return x
+    else:
+        return ""

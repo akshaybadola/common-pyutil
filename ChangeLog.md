@@ -17,3 +17,9 @@
   its warnings of breaking changes and all that. This is much simpler and I'm
   sure will work well.
 - Version bump.
+
+## [2021-07-30 Fri 15:44]
+- Added `contexts.py`
+- Changed some parts of `get_file_and_stream_logger`
+- Added `Tag.add`
+- Version bump to "0.6.0"

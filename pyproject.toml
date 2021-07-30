@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "common-pyutil"
-version = "0.5.0"
+version = "0.6.0"
 description = "Some common python utility functions"
 authors = ["Akshay <atavist13@gmail.com>"]
 license = "MIT"

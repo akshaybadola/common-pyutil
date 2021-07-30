@@ -47,7 +47,26 @@ class Tag:
     def members(self) -> Dict[str, Callable]:
         return self._members
 
+    def add(self, f: Callable):
+        """Add a function `f` to members
+
+        Args:
+            f: Function to add
+
+        """
+        if f not in self._members:
+            if isinstance(f, property):
+                self._members[f.fget.__name__] = f
+            else:
+                self._members[f.__name__] = f
+
     def __call__(self, f: Callable) -> Callable:
+        """Add a function `f` to members self being called as a decorator.
+
+        Args:
+            f: Function to add
+
+        """
         if f not in self._members:
             if isinstance(f, property):
                 self._members[f.fget.__name__] = f
