@@ -23,6 +23,8 @@ class Get:
 
     def __init__(self):
         self._status: Dict[str, int] = {}
+        self._threads: Dict[str, Thread] = {}
+        self._aborted: Dict[str, Event] = {}
         self._finished: Dict[str, Event] = {}
         self._dl_bytes: Dict[str, int] = {}
         self._progress: Dict[str, Union[int, float]] = {}
@@ -38,13 +40,14 @@ class Get:
         """
         self._finished[url] = Event()
         self._progress[url] = 0
-        t = Thread(target=self._call_subr, args=[url], kwargs=kwargs)
-        t.start()
+        self._threads[url] = Thread(target=self._call_subr, args=[url], kwargs=kwargs)
+        self._aborted[url] = Event()
+        self._threads[url].start()
 
     def _call_subr(self, url, **kwargs):
         content = bytearray()
         response = requests.get(url, stream=True, **kwargs)
-        self._status = response.status_code
+        self._status[url] = response.status_code
         if response.status_code != 200:
             self._finished[url].set()
             self._result[url] = response.content
@@ -54,12 +57,28 @@ class Get:
             if total is not None:           # no content length header
                 total_length = int(total)
             for data in response.iter_content(chunk_size=4096):
-                content.extend(data)
-                self._dl_bytes[url] += 4096
-                if total is not None:
-                    self._progress[url] = (100 * (self._dl_bytes[url] / total_length))
+                if not self._aborted[url].is_set():
+                    content.extend(data)
+                    self._dl_bytes[url] += 4096
+                    if total is not None:
+                        self._progress[url] = (100 * (self._dl_bytes[url] / total_length))
+                    else:
+                        self._progress[url] = self._dl_bytes[url] / 1024
+                else:
+                    break
             self._finished[url].set()
-            self._result[url] = content
+            if self._aborted[url]:
+                self._result[url] = None
+            else:
+                self._result[url] = content
+
+    def abort(self, url: str):
+        """Abort the operation for `url`."""
+        self._aborted[url].set()
+
+    def aborted(self, url: str) -> bool:
+        """Check if the operation for `url` was aborted."""
+        return self._aborted[url].is_set()
 
     def result(self, url: str) -> Tuple[int, Union[bytes, bytearray]]:
         """Return the result of the fetch operation.
@@ -104,6 +123,10 @@ class Get:
         """
         return self._progress.get(url)
 
+    def reset(self):
+        """Reset all the internal state."""
+        self.__init__()
+
     def clear(self, url: str):
         """Clear the artefacts for URL.
 
@@ -116,3 +139,5 @@ class Get:
         self._result.pop(url)
         self._dl_bytes.pop(url)
         self._status.pop(url)
+        self._threads.pop(url)
+        self._aborted.pop(url)

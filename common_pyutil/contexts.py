@@ -3,6 +3,30 @@ import time
 
 
 class Timer:
+    """A timer context to monitor time easily.
+
+    Args:
+        accumulate (bool) : Accumulate the time over multiple invocations (default: false)
+
+    Example:
+        timer = Timer()
+
+        with timer:
+            do_something
+            do_something_else
+        print(timer.time)              # print the time taken
+        print(timer.as_dict)           # prints {"time": time_taken}
+
+        timer = Timer(True)     # accumulate time
+        with timer:
+            do_something
+
+        with timer:             # doesn't reset
+            do_something_else
+
+        print(timer.time)
+        timer.clear()           # now reset
+    """
     def __init__(self, accumulate: bool = False):
         self._accumulate = accumulate
         self._time = 0

@@ -1,4 +1,15 @@
-def prompt(string, p_t, p_f):
+from typing import List, Callable, Union
+
+
+def prompt(string: str, p_t: Union[str, set], p_f: Union[str, set]) -> bool:
+    """Prompt for input and return a boolean value.
+
+    Args:
+        string: Prefix string to input
+        p_t: Any of the `True` prompts
+        p_f: Any of the `False` prompts
+
+    """
     x = input(string).strip()
     if isinstance(p_t, str):
         p_t = {p_t}
@@ -13,9 +24,9 @@ def prompt(string, p_t, p_f):
         return False
 
 
-def prompt_yes_no(string):
+def prompt_yes_no(string: str) -> bool:
     return prompt(string + " (yes or no) ", "yes", "no")
 
 
-def prompt_y_n(string):
+def prompt_y_n(string: str) -> bool:
     return prompt(string + " (y, n) ", {"yes", "y"}, {"no", "n"})

@@ -1,1 +1,1 @@
-from version import __version__
+__version__: str = "0.7.2"

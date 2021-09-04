@@ -26,3 +26,13 @@ def test_tag_names():
 def test_tag_members():
     assert tag.members == {"some_func": some_func,
                            "some_other_func": some_other_func}
+
+
+def test_tag_add_remove():
+    tag.remove("some_func")
+    assert tag.members == {"some_other_func": some_other_func}
+    tag.add(some_func)
+    assert tag.members == {"some_func": some_func,
+                           "some_other_func": some_other_func}
+    assert "some_func" in tag
+    assert "random" not in tag

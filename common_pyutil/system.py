@@ -1,16 +1,17 @@
-from typing import Union, List, Optional
+from typing import List, Dict, Union, Callable, Optional
 import os
 import sys
 import importlib.machinery
 import importlib.util
 import types
+import argparse
 
 
 class Semver:
     def __init__(self, version_string: str):
         self._version: List[int] = [*map(int, version_string.split("."))]
 
-    def greater_than(self, other: Union["Semver", str]):
+    def greater_than(self, other: Union["Semver", str]) -> bool:
         if isinstance(other, str):
             other = Semver(other)
             return self.greater_than(other)
@@ -28,7 +29,7 @@ class Semver:
             else:
                 return nolesser and greater
 
-    def equal_to(self, other: Union["Semver", str]):
+    def equal_to(self, other: Union["Semver", str]) -> bool:
         if isinstance(other, str):
             other = Semver(other)
             return self.equal_to(other)
@@ -36,17 +37,23 @@ class Semver:
             return len(self) == len(other) and\
                 all([x == y for x, y in zip(self._version, other._version)])
 
-    def smaller_than(self, other: Union["Semver", str]):
+    def smaller_than(self, other: Union["Semver", str]) -> bool:
         if isinstance(other, str):
             other = Semver(other)
             return self.smaller_than(other)
         else:
             return not self.greater_than(other) and not self.equal_to(other)
 
-    def __len__(self):
+    def geq(self, other: Union["Semver", str]) -> bool:
+        return self.greater_than(other) or self.equal_to(other)
+
+    def leq(self, other: Union["Semver", str]) -> bool:
+        return self.smaller_than(other) or self.equal_to(other)
+
+    def __len__(self) -> int:
         return len(self._version)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return ".".join(map(str, self._version))
 
 
@@ -89,3 +96,46 @@ def load_user_module(modname: str, search_path: List[str] = None) -> Optional[ty
     #     return mod
     # else:
     #     return None
+
+
+class hierarchical_parser:
+    def __init__(self, name: str, usage: str, cmd_map: Dict[str, Callable],
+                 version_str: Optional[str] = None):
+        self.name = name
+        self.usage = usage
+        self.cmd_map = cmd_map
+        self.version_str = version_str or "No version provided"
+
+    def __call__(self):
+        parser = argparse.ArgumentParser(self.name, allow_abbrev=False, add_help=False,
+                                         formatter_class=argparse.RawTextHelpFormatter,
+                                         usage=self.usage)
+        parser.add_argument("command", help=f"""Command to run.
+
+command is one of {", ".join(map(lambda x: f'"{x}"', self.cmd_map.keys()))}
+
+Type "{self.name} command --help" to get help about the individual commands.""")
+        if self.version_str:
+            parser.add_argument("--version", action="store_true", help="Print version and exit")
+        if len(sys.argv) == 1:
+            print("No command given\n")
+            parser.print_help()
+            sys.exit(1)
+        elif sys.argv[1] in {"-h", "--help"}:
+            parser.print_help()
+            sys.exit(0)
+        elif sys.argv[1] == "--version" and self.version_str:
+            print(self.version_str)
+            sys.exit(0)
+        try:
+            args, sub_args = parser.parse_known_args()
+        except Exception:
+            parser.print_help()
+            sys.exit(1)
+
+        if args.command in self.cmd_map:
+            self.cmd_map[args.command](sub_args)
+        else:
+            print(f"Unknown command \"{args.command}\"\n")
+            parser.print_help()
+            sys.exit(1)

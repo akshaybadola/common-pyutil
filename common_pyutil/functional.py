@@ -2,6 +2,15 @@ from typing import Union, List, Optional, Any, Callable, Iterable, Dict
 from functools import partial, reduce
 
 
+def unique(ll: List) -> List:
+    """Return unique elements in a list preserving order."""
+    ret = []
+    for x in ll:
+        if x not in ret:
+            ret.append(x)
+    return ret
+
+
 def identity(x: Any):
     """Identity function.
 
@@ -14,12 +23,13 @@ def identity(x: Any):
     return x
 
 
-def rpartial(func: Callable, *args):
+def rpartial(func: Callable, *args, **kwargs):
     """Partial application of function `func` in reverse.
 
     Args:
         func: The function
         args: Variable number of arguments
+        kwargs: Variable number of keyword arguments
 
     Example:
         >>> def func(a, b, c,):
@@ -30,9 +40,11 @@ def rpartial(func: Callable, *args):
         >>> rpartial(func, 2, 3)(1)
         1, 2, 3
 
+        >>> rpartial(func, 3, b=2)
+
     """
     def temp(*rest):
-        return func(*rest, *args)
+        return func(*rest, *args, **kwargs)
     return temp
 
 
@@ -48,8 +60,10 @@ def maybe_is(x: Any, kinds: List[type]) -> Iterable[bool]:
 
 
 def maybe_(x: Any, kinds: List[type]) -> type:
-    """Return the type of `x` for the first value of which `isinstance` returns true
-    from a list of types in `kinds`.
+    """Return the type of `x` for the first of which equals `kinds`.
+
+    `x` is checked with :func:`isinstance` and the type for which the first one
+    is true is returned.
 
     Example:
         >>> var = "var"
@@ -58,6 +72,7 @@ def maybe_(x: Any, kinds: List[type]) -> type:
 
         >>> maybe_(str, [bool, str, type])
         type
+
     """
     return last_item(first_by(zip(maybe_is(x, kinds), kinds), car))
 
@@ -151,6 +166,13 @@ def first(struct: Iterable, predicate: Callable):
     """Return first item of `struct` which satisfies `predicate`.
     """
     return first_by(struct, identity, predicate)
+
+
+# NOTE:  It'll have to be a fold
+# def firstn(struct: Iterable, predicate: Callable):
+#     """Return first item of `struct` which satisfies `predicate`.
+#     """
+#     return first_by(struct, identity, predicate)
 
 
 def car(struct: Iterable):
@@ -453,3 +475,41 @@ def map_if(func: Callable, pred: Callable[..., bool], struct: Iterable) -> list:
         except StopIteration:
             return retval
     return retval
+
+
+def exactly_one(*_args):
+    """Return the argument which is True if only it is True.
+
+    Args:
+        _args: Arguments
+
+    Returns:
+        The argument which evaluates to True.
+
+    """
+    args = [*_args]
+    if any(args):
+        t = first(args, bool)
+        args.remove(t)
+        if all(map(lambda x: not x, args)):
+            return t
+
+# NOTE: Requires firstn
+# def at_most(k: int, *_args):
+#     """Return the k arguments if at most k of all are True.
+
+#     Args:
+#         k: Maximum number of allowed True
+#         _args: Arguments
+
+#     Returns:
+#         The arguments which evaluate to True.
+
+#     """
+#     args = [*_args]
+#     if any(args):
+#         t = firstn(k, args, bool)
+#         if len(t) == k:
+#             args.remove(t)
+#             if all(map(lambda x: not x, args)):
+#                 return t

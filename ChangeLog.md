@@ -23,3 +23,19 @@
 - Changed some parts of `get_file_and_stream_logger`
 - Added `Tag.add`
 - Version bump to "0.6.0"
+
+## [2021-08-13 Fri 04:31]
+- Fixed a bug in loading.
+- Added types to `io`.
+- Added `system.hierarchical_parser`.
+- Added example to `Timer`.
+- Added `Tag.remove`
+
+## [2021-09-02 Thu 14:38]
+- Added `functional.unique`
+- Added `functional.exactly_one`
+- Added kwargs to `functional.rpartial`
+- Added docstring to `prompt`
+- Added aborting functionality to `net.Get` and fixed some issues.
+- Added `geq` and `leq` to `system.Semver`
+- Version bump to "0.7.2"

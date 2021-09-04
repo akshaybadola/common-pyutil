@@ -1,8 +1,7 @@
 import os
 from setuptools import setup
 
-from common_pyutil.version import __version__
-
+from common_pyutil import __version__
 
 description = """Some common python utility functions."""
 
