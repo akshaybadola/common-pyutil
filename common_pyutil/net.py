@@ -9,6 +9,9 @@ class Get:
     Uses :mod:`requests` as a backend. The request takes place in the background
     and can be queried with :meth:`Get.finished`.
 
+    Args: kwargs: kwargs to pass to all get requests. Can be overriden with
+          individual calls.
+
     Example:
         get = Get()
         url = "http://some_url/files/a_file"
@@ -21,7 +24,7 @@ class Get:
 
     """
 
-    def __init__(self):
+    def __init__(self, kwargs):
         self._status: Dict[str, int] = {}
         self._threads: Dict[str, Thread] = {}
         self._aborted: Dict[str, Event] = {}
@@ -29,6 +32,7 @@ class Get:
         self._dl_bytes: Dict[str, int] = {}
         self._progress: Dict[str, Union[int, float]] = {}
         self._result: Dict[str, bytes] = {}
+        self._kwargs: Dict[str, str] = {}
 
     def __call__(self, url: str, **kwargs):
         """Call :func:`requests.get` with the :code:`url` and :code:`kwargs`.
@@ -46,6 +50,7 @@ class Get:
 
     def _call_subr(self, url, **kwargs):
         content = bytearray()
+        kwargs = {**self._kwargs, **kwargs}
         response = requests.get(url, stream=True, **kwargs)
         self._status[url] = response.status_code
         if response.status_code != 200:

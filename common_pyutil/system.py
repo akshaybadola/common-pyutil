@@ -1,10 +1,12 @@
-from typing import List, Dict, Union, Callable, Optional
+from typing import List, Dict, Union, Callable, Optional, Any
 import os
 import sys
 import importlib.machinery
 import importlib.util
 import types
 import argparse
+
+from .functional import takewhile, dropwhile
 
 
 class Semver:
@@ -78,7 +80,13 @@ def which(program: str):
 
 
 def load_user_module(modname: str, search_path: List[str] = None) -> Optional[types.ModuleType]:
-    """`search_paths` is a list of paths. Defaults to `sys.path`"""
+    """`search_paths` is a list of paths. Defaults to `sys.path`
+
+    Args:
+        modname: Name of the module
+        search_path: Additional search path for the module
+
+    """
     if search_path is not None:
         spec = importlib.machinery.PathFinder.find_spec(modname, search_path)
     else:
@@ -99,11 +107,67 @@ def load_user_module(modname: str, search_path: List[str] = None) -> Optional[ty
 
 
 class hierarchical_parser:
-    def __init__(self, name: str, usage: str, cmd_map: Dict[str, Callable],
+    """Simple way to build a hierarchical argument parser with python.
+
+    args:
+        name: Name of the command
+        usage: The usage string
+        cmd_map: A :class:`dict` of mapping command names to functions
+        version_str: Versioning string
+
+    Example:
+        def func_a(arglist):
+            parser = argparse.ArgumentParser("something")
+            parser.add_argument("-a")
+            args = parser.parser_args(arglist)
+            # rest of the code
+
+        parser = hierarchical_parser("myparser", "myparser USAGE",
+                    {"cmd_a": func_a, "cmd_b": func_b})
+        parser()
+
+    Optional global opts parser can also be given, which will parse any options
+    before first command. If a global opts parser is given then the commands
+    should accept the parsed global opts as a second argument.
+
+    Example:
+        def func_b(arglist, gopts):
+            parser = argparse.ArgumentParser("something")
+            parser.add_argument("-a")
+            args = parser.parser_args(arglist)
+            # rest of the code
+
+        def global_opts_parser(arglist):
+            parser = argparse.ArgumentParser("something")
+            parser.add_argument("--verbosity")
+            parser.add_argument("--logfile")
+            args, _ = parser.parser_known_args(arglist)
+            # can do something with args here
+            return args # optional, will be passed on to commands
+
+        parser = hierarchical_parser("myparser", "myparser USAGE",
+                    {"cmd_a": func_a, "cmd_b": func_b}, global_opts_parser,
+                    version_str="1.2.0")
+
+    Global opts should be flags and should not be set, as that can cause
+    confusion for the commands. *This may change in the future*.
+
+    E.g., for the previous example, the following seems reasonable:
+        $> mycommand -flag cmd_a -a
+
+    However :code:`mycommand --verbosity debug --logfile some_file cmd_a -a`
+    looks confusing. Therefore, global opts are only parsed till the first word
+    not starting with "-" occurs. Hence for previous command, "debug" is parsed
+    as a command and will raise an error as it's not in "cmd_map".
+
+    """
+    def __init__(self, name: str, usage: str, cmd_map: Dict[str, Callable[[List[str]], Any]],
+                 gopts_parser: Optional[Callable[[List[str]], None]],
                  version_str: Optional[str] = None):
         self.name = name
         self.usage = usage
         self.cmd_map = cmd_map
+        self.gopts_parser = gopts_parser
         self.version_str = version_str or "No version provided"
 
     def __call__(self):
@@ -127,14 +191,32 @@ Type "{self.name} command --help" to get help about the individual commands.""")
         elif sys.argv[1] == "--version" and self.version_str:
             print(self.version_str)
             sys.exit(0)
+        if sys.argv[1].startswith("-"):
+            pre_cmd_args = [*takewhile(lambda x: x.startswith("-"), sys.argv[1:])]
+            if self.gopts_parser is not None:
+                gopts = self.gopts_parser(pre_cmd_args)
+            else:
+                msg = ", ".join(map(lambda x: f'"{x}"', pre_cmd_args))
+                print(f"Unknown options {msg}")
+                parser.print_help()
+                sys.exit(1)
+        else:
+            gopts = None
+        post_cmd_args = [*dropwhile(lambda x: x.startswith("-"), sys.argv[1:])]
+        if not post_cmd_args:
+            parser.print_help()
+            sys.exit(1)
         try:
-            args, sub_args = parser.parse_known_args()
+            args, sub_args = parser.parse_known_args(post_cmd_args)
         except Exception:
             parser.print_help()
             sys.exit(1)
 
         if args.command in self.cmd_map:
-            self.cmd_map[args.command](sub_args)
+            if self.gopts_parser is not None:
+                self.cmd_map[args.command](sub_args, gopts)
+            else:
+                self.cmd_map[args.command](sub_args)
         else:
             print(f"Unknown command \"{args.command}\"\n")
             parser.print_help()

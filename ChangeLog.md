@@ -39,3 +39,9 @@
 - Added aborting functionality to `net.Get` and fixed some issues.
 - Added `geq` and `leq` to `system.Semver`
 - Version bump to "0.7.2"
+
+## [2021-10-20 Wed 07:52]
+- Added `dropwhile` and fixed docstring of `takewhile`
+- Removed `Timer` from contexts as it was there in `monitor`
+- Added docstring and types to `recurse_dict` and function `recurse_dict_pred_val`
+- Added global options in `hierarchical_parser` and improved docstring

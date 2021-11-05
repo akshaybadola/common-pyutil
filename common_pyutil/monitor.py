@@ -11,11 +11,22 @@ class Timer:
 
     Example:
         timer = Timer()
-        with timer:
-            retval = some_function(arg1, arg2)
-        print(timer.time)              # prints e.g., 3.14159
-        print(timer.as_dict)           # prints e.g., {"time": 3.14159}
 
+        with timer:
+            do_something
+            do_something_else
+        print(timer.time)              # print the time taken
+        print(timer.as_dict)           # prints {"time": time_taken}
+
+        timer = Timer(True)     # accumulate time
+        with timer:
+            do_something
+
+        with timer:             # doesn't reset
+            do_something_else
+
+        print(timer.time)
+        timer.clear()           # now reset
     """
     def __init__(self, accumulate=False):
         self._accumulate = accumulate
