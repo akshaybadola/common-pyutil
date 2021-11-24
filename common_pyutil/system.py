@@ -113,6 +113,7 @@ class hierarchical_parser:
         name: Name of the command
         usage: The usage string
         cmd_map: A :class:`dict` of mapping command names to functions
+        gopts_parser: A :class:`argparse.ArgumentParser` to parse any global options
         version_str: Versioning string
 
     Example:
@@ -170,6 +171,12 @@ class hierarchical_parser:
         self.gopts_parser = gopts_parser
         self.version_str = version_str or "No version provided"
 
+    # NOTE: The global opts is a bit tricky. If we don't parse and interpret the
+    #       arguments here, then the actions will have to be provided alongside
+    #       the args.
+    #
+    #       Or let the user parse and interpret the global opts but then help
+    #       display and all must be controlled by the user.
     def __call__(self):
         parser = argparse.ArgumentParser(self.name, allow_abbrev=False, add_help=False,
                                          formatter_class=argparse.RawTextHelpFormatter,

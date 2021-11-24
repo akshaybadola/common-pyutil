@@ -388,13 +388,13 @@ def takewhile(predicate: Callable[[Any], bool], seq: Iterable) -> Iterable:
 
     """
     it = iter(seq)
-    _next = it.__next__()
-    while predicate(_next):
-        try:
+    try:
+        _next = it.__next__()
+        while predicate(_next):
             yield _next
             _next = it.__next__()
-        except StopIteration:
-            return None
+    except StopIteration:
+        return None
 
 
 def dropwhile(predicate: Callable[[Any], bool], seq: Iterable) -> Iterable:
@@ -407,12 +407,12 @@ def dropwhile(predicate: Callable[[Any], bool], seq: Iterable) -> Iterable:
 
     """
     it = iter(seq)
-    _next = it.__next__()
-    while predicate(_next):
-        try:
+    try:
+        _next = it.__next__()
+        while predicate(_next):
             _next = it.__next__()
-        except StopIteration:
-            return None
+    except StopIteration:
+        return None
     while(_next):
         yield _next
         try:
@@ -491,13 +491,13 @@ def map_if(func: Callable, pred: Callable[..., bool], struct: Iterable) -> list:
     """
     retval = []
     it = iter(struct)
-    _next = it.__next__()
-    while _next:
-        try:
+    try:
+        _next = it.__next__()
+        while _next:
             retval.append(func(_next) if pred(_next) else _next)
             _next = it.__next__()
-        except StopIteration:
-            return retval
+    except StopIteration:
+        return retval
     return retval
 
 
