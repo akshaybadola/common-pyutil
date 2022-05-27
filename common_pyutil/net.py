@@ -9,9 +9,6 @@ class Get:
     Uses :mod:`requests` as a backend. The request takes place in the background
     and can be queried with :meth:`Get.finished`.
 
-    Args: kwargs: kwargs to pass to all get requests. Can be overriden with
-          individual calls.
-
     Example:
         get = Get()
         url = "http://some_url/files/a_file"
@@ -24,15 +21,16 @@ class Get:
 
     """
 
-    def __init__(self, kwargs):
+    def __init__(self):
+        self._init: Dict[str, str] = {}
         self._status: Dict[str, int] = {}
         self._threads: Dict[str, Thread] = {}
         self._aborted: Dict[str, Event] = {}
         self._finished: Dict[str, Event] = {}
         self._dl_bytes: Dict[str, int] = {}
         self._progress: Dict[str, Union[int, float]] = {}
+        self._responses: Dict[str, requests.Response] = {}
         self._result: Dict[str, bytes] = {}
-        self._kwargs: Dict[str, str] = {}
 
     def __call__(self, url: str, **kwargs):
         """Call :func:`requests.get` with the :code:`url` and :code:`kwargs`.
@@ -49,9 +47,10 @@ class Get:
         self._threads[url].start()
 
     def _call_subr(self, url, **kwargs):
+        self._init[url] = True
         content = bytearray()
-        kwargs = {**self._kwargs, **kwargs}
         response = requests.get(url, stream=True, **kwargs)
+        self._responses[url] = response
         self._status[url] = response.status_code
         if response.status_code != 200:
             self._finished[url].set()
@@ -72,7 +71,7 @@ class Get:
                 else:
                     break
             self._finished[url].set()
-            if self._aborted[url]:
+            if self._aborted[url].is_set():
                 self._result[url] = None
             else:
                 self._result[url] = content
@@ -85,7 +84,7 @@ class Get:
         """Check if the operation for `url` was aborted."""
         return self._aborted[url].is_set()
 
-    def result(self, url: str) -> Tuple[int, Union[bytes, bytearray]]:
+    def result(self, url: str) -> Tuple[int, Union[bytes, bytearray], requests.Response]:
         """Return the result of the fetch operation.
 
         Args:
@@ -95,7 +94,7 @@ class Get:
             A tuple of status and response content.
 
         """
-        return self._status[url], self._result[url]
+        return self._status[url], self._result[url], self._responses[url]
 
     def finished(self, url: str) -> Optional[bool]:
         """Check if the URL has been fetched.
@@ -118,6 +117,15 @@ class Get:
 
         """
         return self._dl_bytes.get(url)
+
+    def url_init(self, url: str) -> bool:
+        """Check if URL fetch has started.
+
+        Args:
+            url: The url for which to perform operation
+
+        """
+        return bool(self._init.get(url, False))
 
     def progress(self, url: str) -> Optional[float]:
         """Display progress of URL.
