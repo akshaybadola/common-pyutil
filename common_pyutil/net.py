@@ -1,6 +1,41 @@
 from typing import Dict, Union, Optional, Tuple
 from threading import Thread, Event
+from subprocess import Popen, PIPE
+import shlex
+import logging
+
 import requests
+
+
+def check_host(host: str, port: int = 22, logger_name: str = "") -> bool:
+    """Check if a given host:port combination is online
+
+    Uses :code:`nc` process to perform the check.
+
+    Args:
+        host: name or addr of host
+        port: port to check. Defaults to 22
+
+    """
+    if "@" in host:
+        host = host.split("@")[1]
+    if logger_name:
+        logger = logging.getLogger(logger_name)
+    p = Popen(shlex.split(f"nc -z -v {host} {port}"), stdout=PIPE, stderr=PIPE)
+    out, err = p.communicate(timeout=1)
+    output = err.decode("utf-8").lower()
+    if "sent" in output and "received" in output:
+        return True
+    elif "no route" in output:
+        return False
+    elif "connection refused" in output:
+        return False
+    else:
+        if logger_name:
+            logger.error(f"Unknown output {output}")
+        else:
+            print(f"Unknown output {output}")
+        return False
 
 
 class Get:
@@ -80,9 +115,17 @@ class Get:
         """Abort the operation for `url`."""
         self._aborted[url].set()
 
+    def cancel(self, url: str) -> bool:
+        """Same as :meth:`abort`"""
+        return self.abort(url)
+
     def aborted(self, url: str) -> bool:
         """Check if the operation for `url` was aborted."""
         return self._aborted[url].is_set()
+
+    def cancelled(self, url: str) -> bool:
+        """Same as aborted."""
+        return self.aborted(url)
 
     def result(self, url: str) -> Tuple[int, Union[bytes, bytearray], requests.Response]:
         """Return the result of the fetch operation.
@@ -91,10 +134,10 @@ class Get:
             url: The url for which to perform operation
 
         Returns:
-            A tuple of status and response content.
+            A tuple of status, response and response content.
 
         """
-        return self._status[url], self._result[url], self._responses[url]
+        return self._status[url], self._responses[url], self._result[url]
 
     def finished(self, url: str) -> Optional[bool]:
         """Check if the URL has been fetched.

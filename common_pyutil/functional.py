@@ -3,7 +3,12 @@ from functools import partial, reduce
 
 
 def unique(ll: List) -> List:
-    """Return unique elements in a list preserving order."""
+    """Return unique elements in a list preserving order.
+
+    Args:
+        ll: The list on which to operate
+
+    """
     ret = []
     for x in ll:
         if x not in ret:
@@ -101,12 +106,34 @@ def maybe_then(x: Any, kinds: List[type], then: List[Callable]) -> Any:
 
 
 def foldl(func: Callable, struct: Iterable):
+    """Fold from left
+
+    Args:
+        func: Function to call on each argument
+        struct: Structure on which to fold
+
+    """
+    it = iter(struct)
+    yield(func(next(it)))
+
+
+def foldr(func: Callable, struct: Iterable):
+    """Fold from right.
+
+    Actually :func:`foldr` cannot really be well implemented in python unless
+    the structure is reversible in constant time or we have a `yieldr` function.
+
+    Args:
+        func: Function to call on each argument
+        struct: Structure on which to fold
+
+    """
     it = iter(struct)
     yield(func(next(it)))
 
 
 def first_by(struct: Optional[Iterable], by: Callable, predicate: Callable = identity) -> Any:
-    """Return first item in list on which `predicate` on output of `by` is True.
+    """Return first item in list on which :code:`predicate` on output of :code:`by` is True.
 
     Return:
         Either the found item or None
@@ -124,12 +151,12 @@ def first_by(struct: Optional[Iterable], by: Callable, predicate: Callable = ide
 
 def any_attr(obj: object, attrs: List[str],
              predicate: Callable[[Any], bool] = identity):
-    """Return True if any attribute in `obj` satisfies `predicate` for a given
-    list of attributes `attrs`.
+    """Return True if any attribute in :code:`obj` satisfies :code:`predicate` for a given
+    list of attributes :code:`attrs`.
 
     Args:
-        obj: Any `python` object
-        attrs: A `list` of names of attributes
+        obj: Any :code:`python` object
+        attrs: A :code:`list` of names of attributes
         predicat: A boolean function
 
     """
@@ -138,12 +165,12 @@ def any_attr(obj: object, attrs: List[str],
 
 def all_attrs(obj: object, attrs: List[str],
               predicate: Callable[[Any], bool] = identity):
-    """Return True if all attributes in `obj` satisfy `predicate` for a given
-    list of attributes `attrs`.
+    """Return True if all attributes in :code:`obj` satisfy :code:`predicate` for a given
+    list of attributes :code:`attrs`.
 
     Args:
-        obj: Any `python` object
-        attrs: A `list` of names of attributes
+        obj: Any :code:`python` object
+        attrs: A :code:`list` of names of attributes
         predicat: A boolean function
 
     """
@@ -152,6 +179,13 @@ def all_attrs(obj: object, attrs: List[str],
 
 def last_item(struct: Optional[Iterable]):
     """Return last item of `struct`.
+
+    Args:
+        struct: The struct of which to get the last item
+
+    Again this isn't very practical for python or in fact, for singly linked
+    lists in general.
+
     """
     if struct:
         it = iter(struct)
@@ -203,7 +237,7 @@ def nth(struct: Iterable, indx: int):
 
 
 def applify(func: Callable, struct: Iterable[Iterable]):
-    """`` all the iters and apply function `func` to each of them
+    """:func:`zip` all the iters and apply function `func` to each of them
     """
     return map(partial(apply, func), struct)
 
@@ -351,30 +385,53 @@ def lens(obj: Optional[Dict], *args) -> Any:
 
 
 def difference(a: Iterable, b: Iterable) -> set:
-    """Return :class:`set` difference of two iterables"""
+    """Return :class:`set` difference of two iterables
+
+    Args:
+        a: first iterable
+        b: second iterable
+
+    """
     a = set([*a])
     b = set([*b])
     return a - b
 
 
 def intersection(a: Iterable, b: Iterable) -> set:
-    """Return :class:`set` intersection of two iterables"""
+    """Return :class:`set` intersection of two iterables
+
+    Args:
+        a: first iterable
+        b: second iterable
+
+    """
     a = set([*a])
     b = set([*b])
     return a.intersection(b)
 
 
 def union(a: Iterable, b: Iterable) -> set:
-    """Return :class:`set` union of two iterables"""
+    """Return :class:`set` union of two iterables
+
+    Args:
+        a: first set
+        b: second set
+
+    """
     a = set([*a])
     b = set([*b])
     return a.union(b)
 
 
-def concat(list_var: Iterable[List]) -> List:
-    """Concat all items in a given list of lists"""
+def concat(_list: Iterable[List]) -> List:
+    """Return a new list from concatenating a given list of lists
+
+    Args:
+        _list: The list of lists
+
+    """
     temp = []
-    for x in list_var:
+    for x in _list:
         temp.extend(x)
     return temp
 
@@ -419,7 +476,6 @@ def dropwhile(predicate: Callable[[Any], bool], seq: Iterable) -> Iterable:
             _next = it.__next__()
         except StopIteration:
             return None
-
 
 
 # FIXME: Broken
@@ -502,7 +558,7 @@ def map_if(func: Callable, pred: Callable[..., bool], struct: Iterable) -> list:
 
 
 def exactly_one(*_args):
-    """Return the argument which is True if only it is True.
+    """Return the argument which is True if only it is True among all arguments.
 
     Args:
         _args: Arguments

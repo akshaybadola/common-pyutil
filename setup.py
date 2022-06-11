@@ -33,6 +33,6 @@ setup(
     include_package_data=True,
     package_data={"common_pyutil": ["py.typed"]},
     keywords='utilities functional',
-    python_requires=">=3.6, <=4.0",
-    install_requires=["requests==2.26.0"]
+    python_requires=">=3.7, <=4.0",
+    install_requires=["requests>=2.26.0", "file-magic>=0.4.0"]
 )
