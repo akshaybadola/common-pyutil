@@ -22,12 +22,14 @@ def identity(x: Any):
     Example:
         >>> identity(10)
         10
-        >>> identity(None)
-        None
+        >>> identity(None)        # Returns None
     """
     return x
 
 
+# FIXME: rpartial is buggy and the last example here fails
+#        as keywords can cause conflicts with arg applications
+#        We get "got two values for 'b'" in the last example
 def rpartial(func: Callable, *args, **kwargs):
     """Partial application of function `func` in reverse.
 
@@ -38,14 +40,14 @@ def rpartial(func: Callable, *args, **kwargs):
 
     Example:
         >>> def func(a, b, c,):
-        >>>     print(a, b, c)
+        ...     print(a, b, c)
 
         # b and c take the place of 'b' and 'c' in the function arguments here
         # That is, left to right
         >>> rpartial(func, 2, 3)(1)
-        1, 2, 3
+        1 2 3
 
-        >>> rpartial(func, 3, b=2)
+        >>> rpartial(func, 3, b=2)(1)
 
     """
     def temp(*rest):
@@ -58,7 +60,7 @@ def maybe_is(x: Any, kinds: List[type]) -> Iterable[bool]:
 
     Example:
         >>> var = "var"
-        >>> maybe_is(var, [bool, str, type])
+        >>> [*maybe_is(var, [bool, str, type])]
         [False, True, False]
     """
     return map(partial(apply, isinstance), [(x, k) for k in kinds])
@@ -73,10 +75,10 @@ def maybe_(x: Any, kinds: List[type]) -> type:
     Example:
         >>> var = "var"
         >>> maybe_(var, [bool, str, type])
-        str
+        <class 'str'>
 
         >>> maybe_(str, [bool, str, type])
-        type
+        <class 'type'>
 
     """
     return last_item(first_by(zip(maybe_is(x, kinds), kinds), car))
@@ -93,7 +95,7 @@ def maybe_then(x: Any, kinds: List[type], then: List[Callable]) -> Any:
         3
 
         >>> class Var:
-        >>>     pass
+        ...     pass
         >>> var = Var()
         >>> maybe_then(Var, kinds, funcs)
         'Var'
@@ -223,6 +225,12 @@ def first_item(struct: Iterable):
 
 def nth(struct: Iterable, indx: int):
     """Return nth item of `struct`.
+
+    Example:
+        >>> d = {x: x for x in range(10)}
+        >>> nth(d, 1)
+        1
+
     """
     it = iter(struct)
     i = 0
@@ -265,7 +273,7 @@ def apply(func: Callable, args: List):
 
     Example:
         >>> def add(a, b):
-        >>>     return a + b
+        ...     return a + b
         >>> apply(add, [1, 2])
         3
     """
@@ -283,14 +291,14 @@ def pipe(*args: Callable) -> Callable:
 
     Example:
         >>> def f(x: int):
-        >>>     print(x)
-        >>>     return str(x)
-        >>>
+        ...     print(x)
+        ...     return str(x)
+
         >>> def g(x: str):
-        >>>     return "func g " + x
-        >>>
+        ...     return "func g " + x
+
         >>> def h(x: str):
-        >>>     return "func h " + x
+        ...     return "func h " + x
 
         >>> pipe(f, g, h)(10)
         10
@@ -312,23 +320,27 @@ def thunkify(*args: Callable) -> Callable:
     evaluation of arguments. Can be used for side effects.
 
     Example:
-        def f(x: int):
-            print("func f", x)
+        >>> def f(x: int):
+        ...     print("func f", x)
 
-        def g():
-            print("func g")
+        >>> def g():
+        ...     print("func g")
 
-        val = 10
-        thunk = thunkify(partial(f, val), g)
-        thunk()   # prints "func f 10" and "func g"
+        >>> val = 10
+        >>> thunk = thunkify(partial(f, val), g)
+        >>> thunk()
+        func f 10
+        func g
 
         # Or if val won't be available till later
-        thunk = thunkify(f, lambda *_: g())
-        some_other_func(arg1, arg2, thunk)
+        >>> thunk = thunkify(f, lambda *_: g())
+        >>> some_other_func(arg1, arg2, thunk)
 
-        # In some_other_func
-        val = 20
-        thunk(val)   # prints "func f 20" and "func g"
+        >>> # In some_other_func
+        >>> val = 20
+        >>> thunk(val)   # prints "func f 20" and "func g"
+        func f 20
+        func g
 
     """
     def thunk(*_args):
@@ -511,18 +523,18 @@ def flatten(_list: List, depth: Optional[int] = None):
     If depth is not given then the list is flattened as much as possible.
 
     Example:
-        flatten([[0, 1], [2, 3]])
-        >>> [0, 1, 2, 3]
+        >>> flatten([[0, 1], [2, 3]])
+        [0, 1, 2, 3]
 
-        flatten([[0, 1], [2, [3, 4]]])
-        >>> [0, 1, 2, 3, 4]
+        >>> flatten([[0, 1], [2, [3, 4]]])
+        [0, 1, 2, 3, 4]
 
-        flatten([[0, 1], [2, [3, 4]]], 1)
-        >>> [0, 1, 2, [3, 4]]
+        >>> flatten([[0, 1], [2, [3, 4]]], 1)
+        [0, 1, 2, [3, 4]]
 
         # Will not flatten a set
-        flatten([[0, 1], [2, {3, 4}]])
-        >>> [0, 1, 2, {3, 4}]
+        >>> flatten([[0, 1], [2, {3, 4}]])
+        [0, 1, 2, {3, 4}]
     """
     retval = []
     if depth is not None:
@@ -557,22 +569,43 @@ def map_if(func: Callable, pred: Callable[..., bool], struct: Iterable) -> list:
     return retval
 
 
-def exactly_one(*_args):
+def exactly_one(*args):
     """Return the argument which is True if only it is True among all arguments.
 
     Args:
-        _args: Arguments
+        args: Arguments
 
     Returns:
         The argument which evaluates to True.
 
     """
-    args = [*_args]
-    if any(args):
-        t = first(args, bool)
-        args.remove(t)
-        if all(map(lambda x: not x, args)):
-            return t
+    if sum(map(bool, args)) == 1:
+        return first(args, identity)
+    else:
+        return None
+
+
+def exactly_k(k, *args):
+    """Return all arguments which are :code:`True` if only if
+    exactly :code:`k` are :code:`True` among all arguments.
+
+    Args:
+        args: Arguments
+
+    Returns:
+        The arguments which evaluates to True.
+
+    """
+    if sum(map(bool, args)) == k:
+        return [*filter(identity, args)]
+    else:
+        return None
+
+
+
+# def cond(cases: Union[List[Tuple]]):
+#     pass
+
 
 # NOTE: Requires firstn
 # def at_most(k: int, *_args):

@@ -31,13 +31,15 @@ class Semver:
             else:
                 return nolesser and greater
 
-    def equal_to(self, other: Union["Semver", str]) -> bool:
+    def equal_to(self, other: object) -> bool:
         if isinstance(other, str):
             other = Semver(other)
             return self.equal_to(other)
-        else:
+        elif isinstance(other, self.__class__):
             return len(self) == len(other) and\
                 all([x == y for x, y in zip(self._version, other._version)])
+        else:
+            raise NotImplementedError(f"Cannot compare Semver and {type(other)}")
 
     def smaller_than(self, other: Union["Semver", str]) -> bool:
         if isinstance(other, str):
@@ -51,6 +53,24 @@ class Semver:
 
     def leq(self, other: Union["Semver", str]) -> bool:
         return self.smaller_than(other) or self.equal_to(other)
+
+    def __ne__(self, other: object) -> bool:
+        return not self.equal_to(other)
+
+    def __eq__(self, other: object) -> bool:
+        return self.equal_to(other)
+
+    def __lt__(self, other: Union["Semver", str]) -> bool:
+        return self.smaller_than(other)
+
+    def __le__(self, other: Union["Semver", str]) -> bool:
+        return self.leq(other)
+
+    def __gt__(self, other: Union["Semver", str]) -> bool:
+        return self.greater_than(other)
+
+    def __ge__(self, other: Union["Semver", str]) -> bool:
+        return self.geq(other)
 
     def __len__(self) -> int:
         return len(self._version)
