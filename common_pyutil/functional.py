@@ -602,6 +602,28 @@ def exactly_k(k, *args):
         return None
 
 
+def keep(func: Callable, struct: Iterable) -> Iterable:
+    """Return a list of only those elements for which :code:`func`
+    evaluates to True
+
+    Args:
+        func: The function
+        struct: The struct on which it is applied
+
+
+    """
+    retval = []
+    it = iter(struct)
+    try:
+        _next = func(it.__next__())
+        while True:
+            if _next:
+                retval.append(_next)
+            _next = func(it.__next__())
+    except StopIteration:
+        return retval
+    return retval
+
 
 # def cond(cases: Union[List[Tuple]]):
 #     pass
