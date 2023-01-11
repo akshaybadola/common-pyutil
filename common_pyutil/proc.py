@@ -1,9 +1,11 @@
 from typing import List, Union, Optional, Tuple
+import shlex
 import platform
 from subprocess import Popen, PIPE
 
 
 def call(cmd: Union[str, List[str]], input: str = "",
+         split: bool = True, shell: bool = False,
          timeout: Optional[Union[int, float]] = None) -> Tuple[str, str]:
     """Call a process with command :code:`cmd` caputre outputs and return.
 
@@ -12,20 +14,22 @@ def call(cmd: Union[str, List[str]], input: str = "",
         timeout: Timeout for the command
 
     """
+    if isinstance(cmd, str) and split:
+        cmd = shlex.split(cmd)
     if timeout:
         if input:
-            p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=shell)
             out, err = p.communicate(input=input.encode(),
                                      timeout=timeout)
         else:
-            p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+            p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=shell)
             out, err = p.communicate(timeout=timeout)
     else:
         if input:
-            p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=shell)
             out, err = p.communicate(input=input.encode())
         else:
-            p = Popen(cmd, stdout=PIPE, stderr=PIPE)
+            p = Popen(cmd, stdout=PIPE, stderr=PIPE, shell=shell)
             out, err = p.communicate()
     return out.decode("utf-8").strip(), err.decode("utf-8").strip()
 
