@@ -22,7 +22,9 @@ def identity(x: Any):
     Example:
         >>> identity(10)
         10
-        >>> identity(None)        # Returns None
+        >>> identity(None) is None
+        True
+
     """
     return x
 
@@ -577,6 +579,16 @@ def exactly_one(*args):
 
     Returns:
         The argument which evaluates to True.
+
+    Example:
+        >>> exactly_one("string", False, "")
+        'string'
+
+        >>> exactly_one(1, "str", False, None) is None
+        True
+
+        >>> exactly_one(False, None, 0) is None
+        True
 
     """
     if sum(map(bool, args)) == 1:
