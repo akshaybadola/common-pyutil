@@ -16,7 +16,7 @@ def unique(ll: List) -> List:
     return ret
 
 
-def identity(x: Any):
+def identity(x: Any) -> Any:
     """Identity function.
 
     Example:
@@ -151,6 +151,7 @@ def first_by(struct: Optional[Iterable], by: Callable, predicate: Callable = ide
                     return x
             except StopIteration:
                 return None
+    return None
 
 
 def any_attr(obj: object, attrs: List[str],
@@ -164,7 +165,7 @@ def any_attr(obj: object, attrs: List[str],
         predicat: A boolean function
 
     """
-    return any(map(lambda x: predicate(getattr(obj, x, None)), attrs))
+    return any(predicate(getattr(obj, x, None)) for x in attrs)
 
 
 def all_attrs(obj: object, attrs: List[str],
@@ -178,7 +179,7 @@ def all_attrs(obj: object, attrs: List[str],
         predicat: A boolean function
 
     """
-    return all(map(lambda x: predicate(getattr(obj, x, None)), attrs))
+    return all(predicate(getattr(obj, x, None)) for x in attrs)
 
 
 def last_item(struct: Optional[Iterable]):
@@ -198,6 +199,7 @@ def last_item(struct: Optional[Iterable]):
                 x = next(it)
             except StopIteration:
                 return x
+    return None
 
 
 def first(struct: Iterable, predicate: Callable):
@@ -359,12 +361,11 @@ def print_lens(obj: Optional[Dict], *args, prefix="") -> Any:
     if obj is None:
         print(prefix + " (NOT FOUND)")
         return None
-    elif args:
+    if args:
         return print_lens(obj.get(args[0]), *args[1:],
                           prefix=(prefix + " -> " if prefix else "") + str(args[0]))
-    else:
-        print(prefix + " -> " + str(obj))
-        return obj
+    print(prefix + " -> " + str(obj))
+    return obj
 
 
 def set_lens(obj: Optional[Dict], keys: List[str], val: Any) -> bool:
@@ -372,13 +373,12 @@ def set_lens(obj: Optional[Dict], keys: List[str], val: Any) -> bool:
     """
     if obj is None:
         return False
-    elif keys and len(keys) == 1:
+    if keys and len(keys) == 1:
         obj[keys[0]] = val
         return True
-    elif keys:
+    if keys:
         return set_lens(obj.get(keys[0]), keys[1:], val)
-    else:
-        return False
+    return False
 
 
 def lens(obj: Optional[Dict], *args) -> Any:
@@ -390,12 +390,9 @@ def lens(obj: Optional[Dict], *args) -> Any:
 
     Returns None if a value isn't found for a sequence of keys.
     """
-    if obj is None:
-        return None
-    elif args:
+    if args and obj:
         return lens(obj.get(args[0]), *args[1:])
-    else:
-        return obj
+    return obj
 
 
 def difference(a: Iterable, b: Iterable) -> set:
@@ -406,8 +403,8 @@ def difference(a: Iterable, b: Iterable) -> set:
         b: second iterable
 
     """
-    a = set([*a])
-    b = set([*b])
+    a = set(*a)
+    b = set(*b)
     return a - b
 
 
@@ -419,8 +416,8 @@ def intersection(a: Iterable, b: Iterable) -> set:
         b: second iterable
 
     """
-    a = set([*a])
-    b = set([*b])
+    a = set(*a)
+    b = set(*b)
     return a.intersection(b)
 
 
@@ -432,8 +429,8 @@ def union(a: Iterable, b: Iterable) -> set:
         b: second set
 
     """
-    a = set([*a])
-    b = set([*b])
+    a = set(*a)
+    b = set(*b)
     return a.union(b)
 
 
@@ -593,8 +590,7 @@ def exactly_one(*args):
     """
     if sum(map(bool, args)) == 1:
         return first(args, identity)
-    else:
-        return None
+    return None
 
 
 def exactly_k(k, *args):
@@ -610,8 +606,7 @@ def exactly_k(k, *args):
     """
     if sum(map(bool, args)) == k:
         return [*filter(identity, args)]
-    else:
-        return None
+    return None
 
 
 def keep(func: Callable, struct: Iterable) -> Iterable:

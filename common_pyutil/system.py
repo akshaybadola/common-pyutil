@@ -178,12 +178,13 @@ class hierarchical_parser:
     #       Or let the user parse and interpret the global opts but then help
     #       display and all must be controlled by the user.
     def __call__(self):
+        cmds = ", ".join(f'"{x}"' for x in self.cmd_map)
         parser = argparse.ArgumentParser(self.name, allow_abbrev=False, add_help=False,
                                          formatter_class=argparse.RawTextHelpFormatter,
                                          usage=self.usage)
         parser.add_argument("command", help=f"""Command to run.
 
-command is one of {", ".join(map(lambda x: f'"{x}"', self.cmd_map.keys()))}
+command is one of {cmds}
 
 Type "{self.name} command --help" to get help about the individual commands.""")
         if self.version_str:
@@ -203,7 +204,7 @@ Type "{self.name} command --help" to get help about the individual commands.""")
             if self.gopts_parser is not None:
                 gopts = self.gopts_parser(pre_cmd_args)
             else:
-                msg = ", ".join(map(lambda x: f'"{x}"', pre_cmd_args))
+                msg = ", ".join(f'"{x}"' for x in pre_cmd_args)
                 print(f"Unknown options {msg}")
                 parser.print_help()
                 sys.exit(1)

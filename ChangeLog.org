@@ -53,3 +53,8 @@
    - ~which~ is now in ~proc.py~ (removed until tests written for it.)
    - Python version ~requires>=3.7~ in ~setup.py~.
    - Added file ~venv.py~
+
+** [2023-04-17 Mon 08:25]
+   - Minor changes including typing in ~functional.py~
+   - Some other changes in ~hierarchical_parser~ though that class should be
+     removed and a template based on ~argparse~ should be there.
