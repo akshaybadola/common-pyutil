@@ -28,22 +28,32 @@ class Timer:
         print(timer.time)
         timer.clear()           # now reset
     """
-    def __init__(self, accumulate=False):
-        self._accumulate = accumulate
+    def __init__(self, accumulate: bool = False):
+        self._accumulate: bool = accumulate
         self._time = 0
 
     def __enter__(self):
         self._start = time.time()
 
     def __exit__(self, *args):
+        self._last = time.time() - self._start
         if self.accumulate:
-            self._time += time.time() - self._start
+            self._time += self._last
         else:
-            self._time = time.time() - self._start
+            self._time = self._last
 
     def clear(self):
         "Clear the timer instance"
         self._time = 0
+
+    @property
+    def last(self) -> float:
+        """Return the last measured time
+
+        Same as :attr:`time` if :attr:`accumulate` is false
+
+        """
+        return self._last
 
     @property
     def time(self) -> float:

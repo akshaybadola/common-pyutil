@@ -58,3 +58,7 @@
    - Minor changes including typing in ~functional.py~
    - Some other changes in ~hierarchical_parser~ though that class should be
      removed and a template based on ~argparse~ should be there.
+
+** [2023-07-05 Wed 13:57]
+   - Fixed a bug where ~get_file_and_stream_logger~ default format was not set correctly
+   - Added ~last~ property to ~monitor~

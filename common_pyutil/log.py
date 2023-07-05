@@ -52,10 +52,8 @@ def get_file_and_stream_logger(logdir: Optional[str], logger_name: str,
     Returns:
         A tuple of filename and the logger instance
     """
-    if not datefmt:
-        datefmt = '%Y/%m/%d %I:%M:%S %p'
-    if not fmt:
-        '%(asctime)s %(message)s'
+    datefmt = datefmt or '%Y/%m/%d %I:%M:%S %p'
+    fmt = fmt or '[%(levelname)s] %(asctime)s %(message)s'
     logger = logging.getLogger(logger_name)
     formatter = logging.Formatter(datefmt=datefmt, fmt=fmt)
     if not no_file_logger and logdir and log_file_name:
