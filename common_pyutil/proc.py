@@ -7,7 +7,7 @@ from subprocess import Popen, PIPE
 def call(cmd: Union[str, List[str]], input: str = "",
          split: bool = True, shell: bool = False,
          timeout: Optional[Union[int, float]] = None) -> Tuple[str, str]:
-    """Call a process with command :code:`cmd` caputre outputs and return.
+    """Call a process with command :code:`cmd` capture outputs and return.
 
     Args:
         cmd: The command line for the process to open

@@ -87,7 +87,8 @@ def maybe_(x: Any, kinds: List[type]) -> type:
 
 
 def maybe_then(x: Any, kinds: List[type], then: List[Callable]) -> Any:
-    """Maybe if `x` is one of the `kinds`, call function `then` with that value.
+    """Maybe if :code:`x` is one of the :code:`kinds`, call function :code:`then` with that value.
+
     Example:
         >>> var = "var"
         >>> kinds = [str, bool, type]
@@ -103,7 +104,7 @@ def maybe_then(x: Any, kinds: List[type], then: List[Callable]) -> Any:
         'Var'
 
     Return:
-        The value from corresponding function or None if it's not one of the `kinds`.
+        The value from corresponding function or None if it's not one of the :code:`kinds`.
     """
     maybe = first_by(zip(maybe_is(x, kinds), then), car)
     return maybe and last_item(maybe)(x)
@@ -393,6 +394,23 @@ def lens(obj: Optional[Dict], *args) -> Any:
     if args and obj:
         return lens(obj.get(args[0]), *args[1:])
     return obj
+
+
+def unravel(obj_or_list: Union[Dict, List, None], *args) -> Any:
+    """Recursively access values for given keys in :class:`dict` `obj`
+
+    Args:
+        obj: The object to scope
+        args: variable number of arguments
+
+    Returns None if a value isn't found for a sequence of keys.
+    """
+    if args:
+        if isinstance(obj_or_list, dict):
+            return unravel(obj_or_list.get(args[0]), *args[1:])
+        else:
+            return unravel(obj_or_list.__getitem__(args[0]), *args[1:])
+    return obj_or_list
 
 
 def difference(a: Iterable, b: Iterable) -> set:

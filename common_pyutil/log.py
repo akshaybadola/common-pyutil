@@ -109,7 +109,6 @@ def get_file_logger(logdir, logger_name: str,
 def get_stream_logger(logger_name: str,
                       log_level: Optional[str] = "debug",
                       logger_level: Optional[str] = "debug",
-                      new_file: Optional[bool] = True,
                       datefmt: Optional[str] = None,
                       fmt: Optional[str] = None) -> logging.Logger:
     return get_file_and_stream_logger(None, logger_name, None,

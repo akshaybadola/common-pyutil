@@ -31,6 +31,9 @@ class Timer:
     def __init__(self, accumulate: bool = False):
         self._accumulate: bool = accumulate
         self._time = 0
+        self._iter = 0
+        self._last = 0
+        self._start = 0
 
     def __enter__(self):
         self._start = time.time()
@@ -39,12 +42,14 @@ class Timer:
         self._last = time.time() - self._start
         if self.accumulate:
             self._time += self._last
+            self._iter += 1
         else:
             self._time = self._last
 
     def clear(self):
         "Clear the timer instance"
         self._time = 0
+        self._iter = 0
 
     @property
     def last(self) -> float:
@@ -54,6 +59,18 @@ class Timer:
 
         """
         return self._last
+
+    @property
+    def avg(self) -> float:
+        """Return the last measured time
+
+        Same as :attr:`time` if :attr:`accumulate` is false
+
+        """
+        if self.accumulate:
+            return self._time / self._iter
+        else:
+            return self._time
 
     @property
     def time(self) -> float:
@@ -67,5 +84,12 @@ class Timer:
 
     @property
     def as_dict(self):
-        "As a dictionary of {\"time\": time}"
-        return {"time": self._time}
+        """As a dictionary of {\"avg\": average: \"time\": time}
+
+        :code:`avg` is returned if :attr:`accumulate` is true
+
+        """
+        if self.accumulate:
+            return {"avg": self._time / self._iter, "time": self._time}
+        else:
+            return {"time": self._time}

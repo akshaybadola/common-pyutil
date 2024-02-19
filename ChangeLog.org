@@ -62,3 +62,9 @@
 ** [2023-07-05 Wed 13:57]
    - Fixed a bug where ~get_file_and_stream_logger~ default format was not set correctly
    - Added ~last~ property to ~monitor~
+
+** [2024-02-20 Tue 02:22]
+   - Added ~unravel~ in ~functional.py,~ ~prompt~ and ~prompt_p~ in ~io.py~
+   - ~last~ and ~avg~ in ~monitory.timer~
+   - Added new module ~sqlite.py~
+   - Version bump to ~0.9.0~
